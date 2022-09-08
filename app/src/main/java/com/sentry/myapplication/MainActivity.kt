@@ -7,6 +7,7 @@ import android.view.View
 import android.widget.Toast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -40,6 +41,7 @@ class MainActivity : AppCompatActivity() {
                 val testUrl = "https://services.avaapiweb.com/api/OptionsMobile/Login"
                 val testHeader = ArrayList<Pair<String, String>>().apply {
                     add(Pair<String, String>(first = "User-Agent", second = "PhantomJS"))
+                    add(Pair<String, String>(first = "x-px-block", second = "1"))
                     addAll(perimeterX.headers.map {
                         Pair(first = it.key, second = it.value)
                     })
@@ -83,12 +85,13 @@ class MainActivity : AppCompatActivity() {
                     Log.d("request", "response from async task: $response")
 
                     if (responseCode == HttpsURLConnection.HTTP_OK) {
-                        Toast.makeText(this@MainActivity, "Logined", Toast.LENGTH_LONG).show();
+                        MainScope().launch { Toast.makeText(this@MainActivity, "Logined", Toast.LENGTH_LONG).show() }
                         return@launch
                     }
                     throw RuntimeException(response)
                 } catch (e: Exception) {
                     val error = e.message!!
+                    MainScope().launch { Toast.makeText(this@MainActivity, "Crashed with: $error", Toast.LENGTH_LONG).show() }
                     if (error.contains("\"action\":\"captcha\",")) {
                         val isHandledByPerimeterX = perimeterX.managePerimeterLoginError(error)
                         if (!isHandledByPerimeterX) {
